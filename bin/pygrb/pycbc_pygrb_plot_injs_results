@@ -169,18 +169,19 @@ def complete_inj_data(injs, keys, tag, ifos=[]):
                 data_dict[key] = complete_incl_data(injs, key, tag)
             elif key == 'sky_error':
                 data_dict[key] = complete_sky_error_data(injs, tag)
-            elif key == 'eff_dist':
-                eff_dists = np.empty((injs[tag + '/tc'].size, len(ifos)))
+            elif key.startswith('eff_dist'):
+                eff_dist = 0
                 for i, ifo in enumerate(ifos):
-                    eff_dists[:, i] = Detector(ifo).effective_distance(
+                    antenna = Detector(ifo)
+                    data_dict['eff_dist_'+ifo] = antenna.effective_distance(
                         injs[tag + '/distance'],
                         injs[tag + '/ra'],
                         injs[tag + '/dec'],
                         injs[tag + '/polarization'],
                         injs[tag + '/tc'],
-                        injs[tag + '/inclination'],
-                    )
-                data_dict[key] = 1 / (1 / eff_dists).sum(axis=1)
+                        injs[tag + '/inclination'])
+                    eff_dist += 1.0 / data_dict['eff_dist_'+ifo]
+                data_dict['eff_dist'] = 1.0 / eff_dist
             else:
                 data_dict[key] = injs[tag+'/'+key]
         except KeyError:
